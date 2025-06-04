@@ -10,6 +10,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-Supported-green)](https://docs.docker.com/compose/)
 
+Made with ❤️ by the kishna dvaipayan & windsurf 
+
 ## ✨ Features
 
 ### 📊 **Repository Analytics**
@@ -403,4 +405,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-**Made with ❤️ by the open source community** 
+
