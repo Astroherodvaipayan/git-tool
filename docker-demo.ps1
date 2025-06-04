@@ -52,7 +52,7 @@ if (Test-Path ".env.local") {
     @"
 # GitHub Repository Analyzer Environment Configuration
 # Add your GitHub Personal Access Token for higher rate limits
-GITHUB_PAT=
+GITHUB_TOKEN=
 
 # Docker configuration
 NODE_ENV=production

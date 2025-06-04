@@ -78,7 +78,7 @@ Made with ❤️ by the kishna dvaipayan & windsurf
    
    Add your GitHub Personal Access Token to `.env.local`:
    ```env
-   GITHUB_PAT=your_github_personal_access_token_here
+   GITHUB_TOKEN=your_github_personal_access_token_here
    ```
 
 4. **Start development server**

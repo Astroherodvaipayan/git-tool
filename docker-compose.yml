@@ -12,7 +12,7 @@ services:
       - PORT=3000
       - HOSTNAME=0.0.0.0
       # GitHub Personal Access Token (add to .env file)
-      - GITHUB_PAT=${GITHUB_PAT:-}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
     env_file:
       - .env.local
     restart: unless-stopped

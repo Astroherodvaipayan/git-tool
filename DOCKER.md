@@ -33,7 +33,7 @@ nano .env.local
 Required environment variables:
 ```env
 # GitHub Personal Access Token (recommended)
-GITHUB_PAT=your_github_personal_access_token_here
+GITHUB_TOKEN=your_github_personal_access_token_here
 
 # Docker configuration
 NODE_ENV=production
@@ -96,7 +96,7 @@ docker-compose --profile development up -d github-repo-analyzer-dev
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `GITHUB_PAT` | GitHub Personal Access Token | - | Recommended |
+| `GITHUB_TOKEN` | GitHub Personal Access Token | - | Recommended |
 | `NODE_ENV` | Node.js environment | `production` | No |
 | `PORT` | Application port | `3000` | No |
 | `HOSTNAME` | Application hostname | `0.0.0.0` | No |
