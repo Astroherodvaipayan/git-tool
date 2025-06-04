@@ -8,6 +8,8 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-blue)](https://tailwindcss.com/)
 [![D3.js](https://img.shields.io/badge/D3.js-7-orange)](https://d3js.org/)
 
+**Made with ❤️ by the kishna dvaipayan & windsurf ** 
+
 ## ✨ Features
 
 ### 📊 **Repository Analytics**
@@ -326,4 +328,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-**Made with ❤️ by the kishna dvaipayan & windsurf ** 
+
