@@ -8,7 +8,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-blue)](https://tailwindcss.com/)
 [![D3.js](https://img.shields.io/badge/D3.js-7-orange)](https://d3js.org/)
 
-**Made with ❤️ by the kishna dvaipayan & windsurf ** 
+Made with ❤️ by the kishna dvaipayan & windsurf 
 
 ## ✨ Features
 
