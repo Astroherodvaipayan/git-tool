@@ -7,6 +7,8 @@
 [![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-blue)](https://tailwindcss.com/)
 [![D3.js](https://img.shields.io/badge/D3.js-7-orange)](https://d3js.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![Docker Compose](https://img.shields.io/badge/Docker%20Compose-Supported-green)](https://docs.docker.com/compose/)
 
 ## ✨ Features
 
@@ -41,6 +43,7 @@
 - **Error Recovery**: Robust error handling with user-friendly feedback
 - **Responsive Design**: Mobile-first design that works on all devices
 - **Dark/Light Mode**: Automatic theme detection with manual toggle
+- **Docker Support**: Production-ready containerization with development hot-reloading
 
 ## 🚀 Quick Start
 
@@ -83,6 +86,80 @@
 
 5. **Open in browser**
    Navigate to `http://localhost:3000`
+
+## 🐳 Docker Deployment
+
+### Quick Docker Setup
+
+The application includes comprehensive Docker support for both development and production environments.
+
+#### **Option 1: Docker Compose (Recommended)**
+```bash
+# Build and start the application
+docker-compose up -d
+
+# Access the application
+open http://localhost:3000
+
+# View logs
+docker-compose logs -f
+
+# Stop the application
+docker-compose down
+```
+
+#### **Option 2: Docker Build & Run**
+```bash
+# Build the Docker image
+docker build -t github-repo-analyzer .
+
+# Run the container
+docker run -d \
+  --name github-repo-analyzer \
+  -p 3000:3000 \
+  --env-file .env.local \
+  --restart unless-stopped \
+  github-repo-analyzer
+```
+
+#### **Option 3: Development Mode**
+```bash
+# Start with hot-reloading on port 3001
+docker-compose --profile development up -d github-repo-analyzer-dev
+```
+
+### Docker Features
+
+- **🔧 Multi-stage builds** - Optimized production images (~150MB)
+- **🛡️ Security hardened** - Non-root user, Alpine Linux base
+- **🔄 Health checks** - Built-in monitoring at `/api/health`
+- **⚡ Hot-reloading** - Development mode support
+- **📱 Cross-platform** - Runs on any Docker-supported system
+- **🎛️ Environment control** - Full environment variable support
+
+### Interactive Demo Scripts
+
+Run the interactive setup for your platform:
+
+**Windows (PowerShell):**
+```powershell
+.\docker-demo.ps1
+```
+
+**Linux/macOS (Bash):**
+```bash
+chmod +x docker-demo.sh
+./docker-demo.sh
+```
+
+### Production Deployment
+
+For production deployments, see the comprehensive [Docker Documentation](DOCKER.md) which covers:
+- Production configuration
+- Container orchestration (Kubernetes, Docker Swarm)
+- Security best practices
+- Performance optimization
+- Monitoring and troubleshooting
 
 ## 🔑 GitHub API Configuration
 
