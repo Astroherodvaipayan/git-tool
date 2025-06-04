@@ -22,6 +22,18 @@ interface StreamingMetrics {
   isLive: boolean;
 }
 
+interface ProgressMetrics {
+  isLoading: boolean;
+  startTime: Date | null;
+  elapsedTime: number;
+  currentPath: string;
+  totalFolders: number;
+  processedFolders: number;
+  totalFiles: number;
+  currentOperation: string;
+  apiCallsCount: number;
+}
+
 export function RepoStructurePanel({ owner, repo }: { owner: string; repo: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +53,17 @@ export function RepoStructurePanel({ owner, repo }: { owner: string; repo: strin
     updateCount: 0,
     filesChanged: 0,
     isLive: false
+  });
+  const [progressMetrics, setProgressMetrics] = useState<ProgressMetrics>({
+    isLoading: false,
+    startTime: null,
+    elapsedTime: 0,
+    currentPath: '',
+    totalFolders: 0,
+    processedFolders: 0,
+    totalFiles: 0,
+    currentOperation: '',
+    apiCallsCount: 0
   });
   const [isStreaming, setIsStreaming] = useState(true);
   const [dataChanges, setDataChanges] = useState<Set<string>>(new Set());
@@ -102,7 +125,7 @@ export function RepoStructurePanel({ owner, repo }: { owner: string; repo: strin
     return changes;
   };
 
-  // Helper function to recursively build complete file tree
+  // Helper function to recursively build complete file tree with progress tracking
   const buildCompleteFileTree = async (owner: string, repo: string, branch: string = "main", path: string = "", depth: number = 0): Promise<RepoTree> => {
     if (depth > 3) {
       return {
@@ -112,7 +135,23 @@ export function RepoStructurePanel({ owner, repo }: { owner: string; repo: strin
       };
     }
 
+    // Update progress - current path being processed
+    setProgressMetrics(prev => ({
+      ...prev,
+      currentPath: path || 'root',
+      currentOperation: `Fetching ${path || 'root directory'}...`,
+      apiCallsCount: prev.apiCallsCount + 1
+    }));
+
     const files = await getRepoContents(owner, repo, path);
+    
+    // Update progress - count files discovered
+    setProgressMetrics(prev => ({
+      ...prev,
+      totalFiles: prev.totalFiles + files.filter(f => f.type === 'file').length,
+      totalFolders: prev.totalFolders + files.filter(f => f.type === 'dir').length,
+      currentOperation: `Processing ${files.length} items in ${path || 'root'}...`
+    }));
     
     const tree: RepoTree = {
       type: "folder",
@@ -122,6 +161,13 @@ export function RepoStructurePanel({ owner, repo }: { owner: string; repo: strin
 
     for (const file of files) {
       if (file.type === "dir") {
+        // Update progress - processing folder
+        setProgressMetrics(prev => ({
+          ...prev,
+          currentOperation: `Exploring folder: ${file.path}`,
+          processedFolders: prev.processedFolders + 1
+        }));
+        
         const subdirectory = await buildCompleteFileTree(owner, repo, branch, file.path, depth + 1);
         tree.contents[file.name] = {
           type: "folder",
@@ -144,6 +190,28 @@ export function RepoStructurePanel({ owner, repo }: { owner: string; repo: strin
   const fetchRepoStructure = useCallback(async (showLoader = true) => {
     if (showLoader) setLoading(true);
     setError(null);
+    
+    // Initialize progress tracking
+    const startTime = new Date();
+    setProgressMetrics({
+      isLoading: true,
+      startTime: startTime,
+      elapsedTime: 0,
+      currentPath: '',
+      totalFolders: 0,
+      processedFolders: 0,
+      totalFiles: 0,
+      currentOperation: 'Initializing repository scan...',
+      apiCallsCount: 0
+    });
+
+    // Start elapsed time tracker
+    const progressInterval = setInterval(() => {
+      setProgressMetrics(prev => ({
+        ...prev,
+        elapsedTime: Math.floor((new Date().getTime() - startTime.getTime()) / 1000)
+      }));
+    }, 1000);
     
     try {
       const tree = await buildCompleteFileTree(owner, repo, selectedBranch);
@@ -168,11 +236,26 @@ export function RepoStructurePanel({ owner, repo }: { owner: string; repo: strin
       
       const rootNode = prepareVisualizationData(tree);
       setVisData(rootNode);
+
+      // Finalize progress
+      setProgressMetrics(prev => ({
+        ...prev,
+        currentOperation: 'Repository scan completed!',
+        isLoading: false
+      }));
     } catch (error) {
       console.error("Error fetching repo structure:", error);
       setError(error instanceof Error ? error.message : "Failed to fetch repository structure");
       setStreamingMetrics(prev => ({ ...prev, isLive: false }));
+      
+      // Update progress on error
+      setProgressMetrics(prev => ({
+        ...prev,
+        currentOperation: 'Error occurred during scan',
+        isLoading: false
+      }));
     } finally {
+      clearInterval(progressInterval);
       if (showLoader) setLoading(false);
     }
   }, [owner, repo, selectedBranch, isStreaming]);
@@ -498,6 +581,92 @@ export function RepoStructurePanel({ owner, repo }: { owner: string; repo: strin
           <h2 className="text-xl font-semibold">Repository Structure</h2>
         </div>
         
+        {/* Real-time Progress Overlay */}
+        <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-transparent">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              Repository Scan Progress
+            </CardTitle>
+            <CardDescription>
+              Real-time progress of repository structure analysis
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Current Operation */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Current Operation:</span>
+              <span className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                {progressMetrics.currentOperation}
+              </span>
+            </div>
+            
+            {/* Time Elapsed */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Time Elapsed:</span>
+              <span className="text-sm font-mono font-bold text-blue-600">
+                {progressMetrics.elapsedTime}s
+              </span>
+            </div>
+            
+            {/* Current Path */}
+            {progressMetrics.currentPath && (
+              <div className="flex items-start justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Current Path:</span>
+                <span className="text-sm font-mono bg-yellow-100 px-2 py-1 rounded text-yellow-800 max-w-xs truncate ml-2">
+                  {progressMetrics.currentPath}
+                </span>
+              </div>
+            )}
+            
+            {/* Statistics */}
+            <div className="grid grid-cols-3 gap-4 pt-2">
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <div className="text-lg font-bold text-green-600">{progressMetrics.totalFiles}</div>
+                <div className="text-xs text-green-600">Files Found</div>
+              </div>
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <div className="text-lg font-bold text-blue-600">{progressMetrics.processedFolders}</div>
+                <div className="text-xs text-blue-600">Folders Scanned</div>
+              </div>
+              <div className="text-center p-3 bg-purple-50 rounded-lg">
+                <div className="text-lg font-bold text-purple-600">{progressMetrics.apiCallsCount}</div>
+                <div className="text-xs text-purple-600">API Calls</div>
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Progress</span>
+                <span className="font-medium">
+                  {progressMetrics.totalFolders > 0 
+                    ? `${Math.round((progressMetrics.processedFolders / progressMetrics.totalFolders) * 100)}%`
+                    : '0%'
+                  }
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500 ease-out"
+                  style={{ 
+                    width: progressMetrics.totalFolders > 0 
+                      ? `${Math.min((progressMetrics.processedFolders / progressMetrics.totalFolders) * 100, 100)}%`
+                      : '0%'
+                  }}
+                ></div>
+              </div>
+            </div>
+            
+            {/* Animation Effect */}
+            <div className="flex items-center justify-center space-x-1 pt-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+          </CardContent>
+        </Card>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -598,6 +767,15 @@ export function RepoStructurePanel({ owner, repo }: { owner: string; repo: strin
           <span>Last update: {streamingMetrics.lastUpdate.toLocaleTimeString()}</span>
           <span>Updates: {streamingMetrics.updateCount}</span>
           <span>Changes: {streamingMetrics.filesChanged}</span>
+          {progressMetrics.apiCallsCount > 0 && (
+            <>
+              <span>•</span>
+              <span>Last scan: {progressMetrics.totalFiles} files, {progressMetrics.apiCallsCount} API calls</span>
+              {progressMetrics.elapsedTime > 0 && (
+                <span className="font-medium text-blue-600">({progressMetrics.elapsedTime}s)</span>
+              )}
+            </>
+          )}
         </div>
       </CardHeader>
       <CardContent>
